@@ -35,6 +35,7 @@ import matplotlib.pyplot as plt
 import requests
 from io import StringIO
 
+
 # Frecuencia de sampleo 128 Hz
 
 print('Hello Python Scientific World')
