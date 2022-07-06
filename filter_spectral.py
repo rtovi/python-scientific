@@ -1,11 +1,16 @@
 """
 ==================
-Filtros Espectrales
+Spectral Filters
 ==================
 
-Los filtros espectrales permiten filtrar información en el espacio de frecuencias.
+Spectral filters allow to filter information in the spectral domain, based on their frecuencies.
 
-Pueden ser Pasa-bajo, Pasa-alto o pasa-banda.
+They could be low-pass, band-pass, and high-pass.
+Their objective is to enhance SNR, by filtering out the noise contained in the signal.
+Spectral Noise could be:
+
+- White Noise: the power of the noise is the same in all frequencies. 
+- Pink Noise: the power of the noise is inversily proportional to the frequency (higher frequency, less noise)
 
 """
 print(__doc__)
@@ -119,28 +124,13 @@ plt.title(r'Output filtered signal.')
 plt.axis((0,1,-20,20))
 plt.show()
 
-# Este bloque de código permite hacer el mismo análisis sobre la señal completa de EEG, expandiendo un segundo para cubrir toda la señal.
-shamsignal = False
-if (shamsignal):
-    t = np.linspace(0, 1.0, 6430)   # 6430 es el largo de lo que sea.
-    T = 1.0 / 128.0
-    N = 128.0
-    tt=np.asarray([])
-    for i in range(51):
-        t = np.linspace(0.0, N*T, N) * N 
-        t = t + i * N
-        tt=np.concatenate((tt,t), axis=0)
-        
-    plt.plot(tt, 200 * np.sin(2*np.pi*50*tt),'b')
-    plt.show()
-
 
 # Longitud de la señal (10 segundos de señal)
 N = 1280
 sr = 128.0
 
 # Linspace me arma una secuencia de N números igualmente espaciados entre 0.0 y el largo a la frecuencia de sampleo
-x = np.linspace(0.0, N, N*sr)
+x = np.linspace(0.0, N, int(N*sr))
 # A esa secuencia le agrego una señal pura de 10 Hz y una de 20 Hz de mucha mayor amplitud, emulando un ruído no deseado sobre la señal.
 y = 1*np.sin(10.0 * 2.0*np.pi*x) + 9*np.sin(20.0 * 2.0*np.pi*x)
 
@@ -168,3 +158,40 @@ plt.plot(f_oneside, np.abs(X[:n_oneside]), 'b')
 plt.xlabel('Freq (Hz)')
 plt.ylabel('FFT Amplitude |X(freq)|')
 plt.show()
+
+from scipy.fft import rfft, rfftfreq
+
+
+
+import pandas as pd
+signals = pd.read_csv('data/blinking.dat', delimiter=' ', names = ['timestamp','counter','eeg','attention','meditation','blinking'])
+data = signals.values
+eeg = data[:,2]
+
+Fs = 128.0
+
+normalized_signal = eeg
+
+N = len(normalized_signal)
+
+
+# Creo una secuencia de N puntos (el largo de EEG), de 0 hasta el largo de la secuencia en segundos (N/Fs).
+x = np.linspace(0.0, int(N/Fs), N)   
+
+# A esa secuencia de EEG le agrego una señal pura de 30 Hz.  Estoy ayuda a visualizar bien que la relación espectral está ok.
+normalized_signal +=  100*np.sin(30.0 * 2.0*np.pi*x)
+
+yf = rfft(normalized_signal)
+xf = rfftfreq(N, 1 / Fs)
+
+plt.figure(figsize=(14,7))
+plt.title('Frequency Spectrum')
+plt.plot(xf, np.abs(yf), color='green')
+plt.ylabel('Amplitude')
+plt.xlabel('Frequency (Hertz)')
+plt.show()
+
+
+
+
+
